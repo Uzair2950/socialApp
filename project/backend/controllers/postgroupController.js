@@ -7,7 +7,7 @@ import {
     Notifications,
     Chats,
     Users,
-  } from "../database/models/models.js";
+  } from "../models/models.js"
   import chatGroupController from "./chatGroupController.js";
   
   export default {

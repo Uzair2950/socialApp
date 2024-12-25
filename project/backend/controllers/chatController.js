@@ -1,5 +1,5 @@
 import { Chats, Users, Messages } from "../database/models/models.js";
-
+import { Chats, Users, Messages } from "../models/models.js"
 import { getNewMessageCount } from "../utils/utils.js";
 
 // Realtime Chatting Pseudo Steps

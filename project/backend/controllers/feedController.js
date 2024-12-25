@@ -1,4 +1,4 @@
-import { Posts } from "../database/models/models.js";
+import { Posts } from "../models/models.js"
 
 export default {
   getOfficialWallPosts: async function () {

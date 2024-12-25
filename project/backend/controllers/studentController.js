@@ -2,7 +2,7 @@ import {
     Datesheet,
     Enrollment,
     TimeTable,
-  } from "../database/models/models.js";
+  } from "../models/models.js"
   import {
     getCurrentSession,
     getStudentSections,

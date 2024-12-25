@@ -3,7 +3,7 @@ import {
     ChatGroups,
     Users,
     GroupMembers,
-  } from "../database/models/models.js";
+  } from "../models/models.js"
   
   import chatController from "./chatController.js";
   

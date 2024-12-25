@@ -4,7 +4,7 @@ import userController from "../controllers/userController.js";
 import { validateRequest } from "zod-express-middleware";
 import { z } from "zod";
 import multer from "multer";
-import { AutoReply } from "../database/models/models.js";
+import { AutoReply } from "../models/models.js";
 
 const storage = multer.diskStorage({
   destination: "./static/avatars",

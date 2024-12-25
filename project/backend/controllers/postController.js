@@ -1,7 +1,7 @@
 import {
     Posts,
     Comments,
-  } from "../database/models/models.js";
+  } from "../models/models.js"
   
   export default {
     addPost: async function (

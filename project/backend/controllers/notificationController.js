@@ -1,4 +1,4 @@
-import { Notifications } from "../database/models/models.js";
+import { Notifications } from "../models/models.js"
 
 export default {
   getNotifications: async function (uid) {

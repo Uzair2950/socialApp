@@ -6,7 +6,7 @@ import {
     Friends,
     Posts,
     AutoReply,
-  } from "../database/models/models.js";
+  } from "../models/models.js"
   
   import postController from "./postController.js";
   

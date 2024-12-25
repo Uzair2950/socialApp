@@ -1,9 +1,8 @@
 import React from 'react';
-import GRE from './MongoConnect/GetRequestExample'
-
+import LOGIN from './project/frontend/login'
 const App = () =>{
     return(
-        <GRE/>
+        <LOGIN/>
     )
 }
 

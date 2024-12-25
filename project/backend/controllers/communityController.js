@@ -1,5 +1,5 @@
 import { title } from "process";
-import { Communities, CommunityMembers } from "../database/models/models.js";
+import { Communities, CommunityMembers } from "../models/models.js"
 import chatGroupController from "./chatGroupController.js";
 
 export default {
