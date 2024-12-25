@@ -1,3 +1,10 @@
+git add .            # Stage all changes in the current directory
+git commit -m "Your commit message"
+git push -u origin main
+
+
+
+
 git status //Check the status of your repository:
 git add <file>       # Stage a specific file
 git add .            # Stage all changes in the current directory
