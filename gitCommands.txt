@@ -1,0 +1,23 @@
+git status //Check the status of your repository:
+git add <file>       # Stage a specific file
+git add .            # Stage all changes in the current directory
+git commit -m "Your commit message"
+git log              # View commit history:
+git log --oneline    # Condensed one-line history
+
+
+git branch <branch_name>       # Create a new branch:
+git checkout <branch_name>     # Switch to a branch
+git switch <branch_name>         # (or use git switch in newer Git versions):
+git checkout -b <branch_name>    # Create and switch to a new branch
+git merge <branch_name>            Merge a branch into the current branch
+
+git branch -d <branch_name>       # Delete after merging
+git branch -D <branch_name>       # Force delete
+
+
+git clone <repository_url>
+git remote add origin <repository_url>
+git remote -v
+git push origin <branch_name>
+
