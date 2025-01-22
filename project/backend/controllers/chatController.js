@@ -1,5 +1,12 @@
-import { Chats, Users, Messages } from "../database/models/models.js";
-import { Chats, Users, Messages } from "../models/models.js"
+import { Filter } from "bad-words";
+import {
+  Chats,
+  Users,
+  Messages,
+  ChatSettings,
+  AutoReply,
+} from "../database/models/models.js";
+
 import { getNewMessageCount } from "../utils/utils.js";
 
 // Realtime Chatting Pseudo Steps
@@ -15,13 +22,101 @@ export default {
     });
 
     await chat.save();
+    // Add chats to activeChats of both users
     await Users.updateMany(
       { _id: { $in: [sender, receiver] } },
       { $push: { activeChats: chat._id } }
     );
 
+    // Create setting & save settings
+    await ChatSettings.insertMany([
+      {
+        uid: sender,
+        chat: chat._id,
+      },
+      {
+        uid: receiver,
+        chat: chat._id,
+      },
+    ]);
+
     return chat._id;
   },
+
+  getChatSettings: async function (chat, uid) {
+    return await ChatSettings.findOne({ chat, uid });
+  },
+
+  getAutoReplies: async function (user, chat) {
+    return await AutoReply.find({ user, chat }).select("_id message reply");
+  },
+
+  addAutoReply: async function (uid, chat, autoreplies) {
+    let replies = await AutoReply.insertMany(
+      autoreplies.map((e) => ({ user: uid, chat, ...e }))
+    );
+    return replies;
+  },
+
+  removeAutoReply: async function (autoReplyId) {
+    await AutoReply.findByIdAndDelete(autoReplyId);
+  },
+
+  editAutoReply: async function (replyId, message, reply) {
+    await AutoReply.findByIdAndUpdate(replyId, { message, reply });
+  },
+
+  // getAutoReplies: async function (uid) {
+  //   // Damn
+  //   // 1. Fetches the user's auto-replies
+  //   // 2. Gets & Populates the "other" participant (*)
+  //   // 3. Transforms the object
+  //   // 4. Groups all replies by their chatId // (+)
+  //   // Returns somthing like this:
+  //   /*[chatId:string]: {
+  //     details: {name: string, avatarURL: string},
+  //     messages: [{id: string/objectId, message: string, reply: string}]
+  //   }*/
+
+  //   let groupedByChats = (
+  //     await AutoReply.find({ user: uid })
+  //       .select("-user")
+  //       .populate([
+  //         {
+  //           path: "chat",
+  //           select: {
+  //             _id: 1,
+  //             participants: {
+  //               $elemMatch: { $ne: uid }, // * $ne => not equals
+  //             },
+  //           },
+  //           populate: {
+  //             // *
+  //             path: "participants",
+  //             select: "name avatarURL -_id",
+  //           },
+  //         },
+  //       ])
+  //       .lean()
+  //   )
+  //     .map((e) => ({
+  //       ...e,
+  //       chat: { id: e.chat._id, details: e.chat.participants[0] },
+  //     }))
+  //     .reduce((chats, curr) => {
+  //       // +
+  //       chats[curr.chat.id] = chats[curr.chat.id] || {};
+  //       chats[curr.chat.id].details = curr.chat.details || {};
+  //       chats[curr.chat.id].replies = chats[curr.chat.id].replies || [];
+  //       chats[curr.chat.id].replies.push({
+  //         id: curr._id,
+  //         message: curr.message,
+  //         reply: curr.reply,
+  //       });
+  //       return chats;
+  //     }, {});
+  //   return groupedByChats;
+  // },
 
   // getAllChats: async function (uid) {
   //   let userChats = await Users.findById(uid)
@@ -77,6 +172,21 @@ export default {
   //   );
   // },
 
+  // Auto - Download
+
+  toggleAutoDownload: async function (uid, chatid) {
+    let settings = await ChatSettings.findOne({ uid, chat: chatid });
+    settings.autoDownload = !settings.autoDownload;
+    await settings.save();
+    return settings.autoDownload;
+  },
+
+  updateDownloadDirectory: async function (settingsId, dir) {
+    await ChatSettings.findByIdAndUpdate(settingsId, {
+      autoDownloadDirectory: dir,
+    });
+  },
+
   getAllChats: async function (uid) {
     let userChats = await Users.findById(uid)
       .select("activeChats groupChats -_id")
@@ -99,7 +209,7 @@ export default {
     ).populate([
       {
         path: "messages",
-        // select: "content senderId createdAt -_id",
+
         select: {
           content: 1,
           senderId: 1,
@@ -206,9 +316,11 @@ export default {
     isReply = false,
     replyId = undefined
   ) {
+    let filter = new Filter();
+
     try {
       let message = new Messages({
-        content,
+        content: filter.clean(content),
         attachments,
         senderId,
         readBy: [senderId], //woops
@@ -232,6 +344,7 @@ export default {
   },
 
   readMessageById: async function (mid, uid) {
+    // TODO: Fix the readCount: 3 bug
     await Messages.findByIdAndUpdate(mid, {
       $addToSet: { readBy: uid },
       $inc: { readCount: 1 },
