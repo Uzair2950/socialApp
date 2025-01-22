@@ -4,7 +4,7 @@ import userController from "../controllers/userController.js";
 import { validateRequest } from "zod-express-middleware";
 import { z } from "zod";
 import multer from "multer";
-import { AutoReply } from "../models/models.js";
+import { AutoReply } from "../database/models/models.js";
 
 const storage = multer.diskStorage({
   destination: "./static/avatars",
@@ -21,17 +21,17 @@ const router = express.Router();
 //Routes
 
 // Authorize User {username, password}
-router.get(
+router.post(
   "/authorize",
   validateRequest({
     body: z.object({
-      username: z.string(),
+      email: z.string(),
       password: z.string(),
     }),
   }),
   async (req, res) => {
     let user = await userController.authorizeUser(
-      req.body.username,
+      req.body.email,
       req.body.password
     );
 
@@ -168,19 +168,28 @@ router.post("/toggleAutoReply/:uid", async (req, res) => {
   return res.json({ message: "success" });
 });
 
-router.get("/getAutoReplies/:uid", async (req, res) => {
-  return res.json(await userController.getAutoReplies(req.params.uid));
-});
 
-router.post("/addAutoReply/:uid", async (req, res) => {
-  let autoReply = await userController.addAutoReply(req.params.uid, req.body);
+// Since Auto-Replies are different for each chat, so routes have been moved to chatRoute
 
-  return res.json({ autoReply, message: "success" });
-});
+// router.get("/getAutoReplies/:uid", async (req, res) => {
+//   return res.json(await userController.getAutoReplies(req.params.uid));
+// });
 
-router.delete("/removeAutoReply/:id", async (req, res) => {
-  await userController.removeAutoReply(req.params.id);
-  return res.json({ message: "success" });
+// router.post("/addAutoReply/:uid", async (req, res) => {
+//   let autoReply = await userController.addAutoReply(req.params.uid, req.body);
+
+//   return res.json({ autoReply, message: "success" });
+// });
+
+// router.delete("/removeAutoReply/:id", async (req, res) => {
+//   await userController.removeAutoReply(req.params.id);
+//   return res.json({ message: "success" });
+// });
+
+// VIP
+
+router.get("/getVipChat/:uid", async (req, res) => {
+  return res.json(await userController.getVipChat(req.params.uid));
 });
 
 export default router;

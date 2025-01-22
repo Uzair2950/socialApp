@@ -4,7 +4,7 @@ import postController from "../controllers/postController.js";
 import multer from "multer";
 import { validateRequest } from "zod-express-middleware";
 import { z } from "zod";
-import { read } from "fs";
+
 
 const destination = "/static/posts";
 
@@ -30,20 +30,27 @@ router.post("/", postsAttachments.array("images"), (req, res) => {
 
 router.post(
   "/addPost",
-  postsAttachments.array("postsImages"),
+  postsAttachments.array("attachments"),
   async (req, res) => {
     let attachements = req.files?.map((e) => `${destination}/${e.filename}`);
-    console.log(attachements)
-    let { author, content, privacyLevel, group_id } = req.body;
+    console.log(attachements);
+    let { author, content, privacyLevel, group_id, type, allowCommenting } = req.body;
 
-    let post_id = await postController.addPost(
-      author,
-      privacyLevel,
-      content,
-      attachements,
-      group_id
-    );
-    return res.json({ message: "Posted!", post_id });
+    console.log(req.body)
+
+    // let post_id = await postController.addPost(
+    //   author,
+    //   parseInt(privacyLevel),
+    //   content,
+    //   attachements,
+    //   group_id,
+    //   parseInt(type)
+    // );
+    // if (post_id) {
+    //   return res.json({ message: "Posted!", post_id });
+    // }
+    // return res.status(400).json({ message: "Invalid timetable format!" });
+    return res.status(200).json({ message: "Well very nice" });
   }
 );
 
