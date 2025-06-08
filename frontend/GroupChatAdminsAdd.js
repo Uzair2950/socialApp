@@ -12,47 +12,22 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {API_BASE_URL} from '../constants/config';
-import {IMG_BASE_URL} from '../constants/config';
+import {API_BASE_URL, IMG_BASE_URL} from '../constants/config';
 
-const GroupMemberRemove = ({route, navigation}) => {
+const GroupChatAdminsAdd = ({route, navigation}) => {
   const {groupId} = route.params;
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [removingId, setRemovingId] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
 
-  const fetchMembers = async () => {
+  const fetchNonAdminMembers = async () => {
     try {
       setLoading(true);
-
-      // First get member IDs
-      const membersResponse = await axios.get(
-        `${API_BASE_URL}/postgroup/getGroupMembers/${groupId}`,
+      const response = await axios.get(
+        `${API_BASE_URL}/chatgroup/getNonAdminMembers/${groupId}`,
       );
-      const memberIds = membersResponse.data.members;
-
-      // Then fetch details for each member
-      const membersWithDetails = await Promise.all(
-        memberIds.map(async memberId => {
-          try {
-            const userResponse = await axios.get(
-              `${API_BASE_URL}/user/getUserData/${memberId}`,
-            );
-            return userResponse.data;
-          } catch (error) {
-            console.error(`Error fetching user ${memberId}:`, error);
-            return {
-              _id: memberId,
-              name: 'Unknown User',
-              type: 'Member',
-              imgUrl: null,
-            };
-          }
-        }),
-      );
-
-      setMembers(membersWithDetails);
+      setMembers(response.data);
     } catch (error) {
       console.error('Fetch members error:', error);
       Alert.alert('Error', 'Failed to load group members');
@@ -62,91 +37,77 @@ const GroupMemberRemove = ({route, navigation}) => {
     }
   };
 
-  // Handle pull-to-refresh
   const onRefresh = () => {
     setRefreshing(true);
-    fetchMembers();
+    fetchNonAdminMembers();
   };
 
-  // Remove member function
-  const removeMember = async userId => {
+  const addAdmin = async userId => {
     Alert.alert(
-      'Confirm Removal',
-      'Are you sure you want to remove this member?',
+      'Make Admin',
+      'Are you sure you want to make this member an admin?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Remove',
+          text: 'Make Admin',
           onPress: async () => {
             try {
-              setRemovingId(userId);
+              setProcessingId(userId);
               await axios.post(
-                `${API_BASE_URL}/postgroup/removeMember/${groupId}/${userId}`,
+                `${API_BASE_URL}/chatgroup/addGroupAdmins/${groupId}`,
+                {admins: [userId]},
               );
-
-              // Optimistic UI update
               setMembers(prev => prev.filter(member => member._id !== userId));
-              Alert.alert('Success', 'Member removed successfully');
+              Alert.alert('Success', 'Member promoted to admin successfully');
             } catch (error) {
-              console.error('Remove error:', error);
-              Alert.alert('Error', 'Failed to remove member');
-              // Refresh to ensure consistency
-              fetchMembers();
+              console.error('Add admin error:', error);
+              Alert.alert('Error', 'Failed to add admin');
+              fetchNonAdminMembers();
             } finally {
-              setRemovingId(null);
+              setProcessingId(null);
             }
           },
-          style: 'destructive',
         },
       ],
     );
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, [groupId]);
-
-  // Render each member item
   const renderMemberItem = ({item}) => (
     <View style={styles.memberItem}>
       <Image
         source={{
           uri: item.imgUrl
-            ? `${IMG_BASE_URL}${item.imgUrl.startsWith('/') ? '' : '/'}${
-                item.imgUrl
-              }`
+            ? `${IMG_BASE_URL}${item.imgUrl}`
             : `${IMG_BASE_URL}/static/avatars/default_profile.png`,
         }}
         style={styles.memberImage}
       />
-
       <View style={styles.memberInfo}>
-        <Text style={styles.memberName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.memberType} numberOfLines={1}>
-          {item.type}
-        </Text>
+        <Text style={styles.memberName}>{item.name}</Text>
+        <Text style={styles.memberRole}>Member</Text>
       </View>
-
       <TouchableOpacity
-        style={[
-          styles.removeButton,
-          removingId === item._id && styles.removeButtonDisabled,
-        ]}
-        onPress={() => removeMember(item._id)}
-        disabled={removingId === item._id}>
-        {removingId === item._id ? (
+        style={styles.addAdminButton}
+        onPress={() => addAdmin(item._id)}
+        disabled={processingId === item._id}>
+        {processingId === item._id ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Icon name="person-remove" size={20} color="#fff" />
+          <>
+            <Icon name="admin-panel-settings" size={20} color="#fff" />
+            <Text style={styles.addAdminText}>Make Admin</Text>
+          </>
         )}
       </TouchableOpacity>
     </View>
   );
+
+  useEffect(() => {
+    fetchNonAdminMembers();
+  }, [groupId]);
 
   if (loading && !refreshing) {
     return (
@@ -159,25 +120,31 @@ const GroupMemberRemove = ({route, navigation}) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Group Members ({members.length})</Text>
+      <Text style={styles.title}>Add Group Admins</Text>
+      <Text style={styles.subtitle}>
+        Select members to promote to admin status
+      </Text>
 
       <FlatList
         data={members}
         renderItem={renderMemberItem}
         keyExtractor={item => item._id}
-        contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={['#14AE5C']}
-            tintColor="#14AE5C"
           />
         }
+        contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="group" size={50} color="#ccc" />
-            <Text style={styles.emptyText}>No members found</Text>
+            <Text style={styles.emptyText}>
+              {members.length === 0 && !loading
+                ? 'No members available to promote'
+                : 'Loading members...'}
+            </Text>
           </View>
         }
       />
@@ -195,17 +162,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   loadingText: {
     marginTop: 10,
     color: '#14AE5C',
-    fontSize: 16,
   },
-  headerTitle: {
+  title: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -215,61 +186,53 @@ const styles = StyleSheet.create({
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 10,
     padding: 15,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   memberImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 15,
-    backgroundColor: '#eee',
   },
   memberInfo: {
     flex: 1,
-    marginRight: 10,
-    overflow: 'hidden',
   },
   memberName: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
-    marginBottom: 3,
   },
-  memberType: {
+  memberRole: {
     fontSize: 14,
     color: '#666',
   },
-  removeButton: {
-    backgroundColor: '#e74c3c',
-    width: 40,
-    height: 40,
+  addAdminButton: {
+    backgroundColor: '#14AE5C',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     borderRadius: 20,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  removeButtonDisabled: {
-    backgroundColor: '#f5b7b1',
+  addAdminText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 14,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    marginTop: 50,
   },
   emptyText: {
-    textAlign: 'center',
+    marginTop: 10,
     color: '#666',
-    marginTop: 15,
     fontSize: 16,
   },
 });
 
-export default GroupMemberRemove;
+export default GroupChatAdminsAdd;

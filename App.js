@@ -21,8 +21,14 @@ import Friends from './frontend/Friends';
 import FriendRequests from './frontend/FriendRequests';
 import CreateGroup from './frontend/createGroup';
 import GroupDetailsAndPosts from './frontend/groupDetailsAndPosts';
+import GroupChatDetails from './frontend/GroupChatDetails';
 import GroupMemberAdd from './frontend/groupMemberAdd';
 import GroupJoinRequests from './frontend/groupJoinRequests';
+import GroupChatAdminsAdd from './frontend/GroupChatAdminsAdd';
+import GroupChatMemberAdd from './frontend/GroupChatMemberAdd';
+import GroupChatMemberRemove from './frontend/GroupChatMemberRemove';
+import GroupChatMembersView from './frontend/GroupChatMembersView';
+import SearchGroups from './frontend/searchGroups';
 import AddGroupAdmins from './frontend/AddGroupAdmins';
 import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
 import home from './Images/Home.png';
@@ -39,6 +45,7 @@ import axios from 'axios';
 import UserGroups from './frontend/groups';
 import GroupSettings from './frontend/groupSettings';
 import GroupMemberRemove from './frontend/groupMemberRemove';
+import GroupChatSettings from './frontend/GroupChatSettings';
 import {API_BASE_URL} from './constants/config';
 
 const USER_ID = '6754a9268db89992d5b8221e';
@@ -229,7 +236,7 @@ const App = () => {
     <PaperProvider theme={theme}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Groups"
+          initialRouteName="Login"
           screenOptions={{
             headerShown: true,
             headerTitleAlign: 'center',
@@ -250,7 +257,6 @@ const App = () => {
             component={MainTabs}
             options={{headerShown: false}}
           />
-
           <Stack.Screen
             name="UserProfile"
             component={AlertWithDrawer}
@@ -375,6 +381,41 @@ const App = () => {
             name="AddGroupAdmins"
             component={AddGroupAdmins}
             options={{title: 'Add Admins'}}
+          />
+          <Stack.Screen
+            name="SearchGroups"
+            component={SearchGroups}
+            options={{title: 'Search Groups'}}
+          />
+          <Stack.Screen
+            name="GroupChatSettings"
+            component={GroupChatSettings}
+            options={{title: 'Group Chat Settings'}}
+          />
+          <Stack.Screen
+            name="GroupChatDetails"
+            component={GroupChatDetails}
+            options={{title: 'Group Chat Details'}}
+          />
+          <Stack.Screen
+            name="GroupChatAdminsAdd"
+            component={GroupChatAdminsAdd}
+            options={{title: 'Add Group Chat Admins'}}
+          />
+          <Stack.Screen
+            name="GroupChatMemberAdd"
+            component={GroupChatMemberAdd}
+            options={{title: 'Add Group Chat Members'}}
+          />
+          <Stack.Screen
+            name="GroupChatMemberRemove"
+            component={GroupChatMemberRemove}
+            options={{title: 'Remove Group Chat Admins'}}
+          />
+          <Stack.Screen
+            name="GroupChatMembersView"
+            component={GroupChatMembersView}
+            options={{title: 'Group Chat Members'}}
           />
           <Stack.Screen
             name="ImageViewer"

@@ -443,7 +443,7 @@ const GroupSettings = ({navigation, route}) => {
               );
               navigation.navigate('AddGroupAdmins', {
                 groupId,
-                currentAdmins: response.data.admins || [],
+                currentAdmins: response.data.admins || [], 
               });
             } catch (error) {
               console.error('Failed to fetch group admins:', error);

@@ -65,6 +65,11 @@ const UserGroups = () => {
         <Text style={styles.groupCount}>{groups.length} Groups</Text>
         <TouchableOpacity
           style={styles.createButton}
+          onPress={() => navigation.navigate('SearchGroups', USER_ID)}>
+          <Text style={styles.createButtonText}>Search Groups</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.createButton}
           onPress={() => navigation.navigate('CreateGroup', USER_ID)}>
           <Text style={styles.createButtonText}>+ Create Group</Text>
         </TouchableOpacity>

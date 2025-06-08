@@ -20,9 +20,7 @@ const GroupMemberAdd = ({route, navigation}) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  // const API_BASE_URL = 'http://192.168.215.120:3001/api';
-  // const IMG_BASE_URL = 'http://192.168.215.120:3001';
-  // Fetch users based on search query
+
   const searchUsers = async () => {
     if (searchQuery.length < 2) {
       Alert.alert('Info', 'Please enter at least 2 characters to search');

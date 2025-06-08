@@ -2296,7 +2296,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {useCallback} from 'react';
 import {API_BASE_URL} from '../constants/config';
 
-const USER_ID = '6754a9268db89992d5b82220';
+const USER_ID = '6754a9268db89992d5b8221e';
 const DEFAULT_PROFILE_PIC = 'https://via.placeholder.com/40';
 
 const GroupDetailsAndPosts = ({route, navigation}) => {
@@ -2315,6 +2315,7 @@ const GroupDetailsAndPosts = ({route, navigation}) => {
   const [requestSent, setRequestSent] = useState(false);
   const [membersCount, setMembersCount] = useState(0);
   const [leaving, setLeaving] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   // Post creation state
   const [showPostForm, setShowPostForm] = useState(false);
   const [content, setContent] = useState('');
@@ -2663,6 +2664,7 @@ const GroupDetailsAndPosts = ({route, navigation}) => {
         setRequestSent(true);
       } else {
         fetchGroupData(); // Refresh group data if joined directly
+        setRefreshKey(prev => prev + 1);
       }
     } catch (error) {
       console.error('Error sending join request:', error);
@@ -2764,7 +2766,7 @@ const GroupDetailsAndPosts = ({route, navigation}) => {
       fetchGroupData();
       fetchGroupMembersCount();
       checkUserMembership();
-    }, [groupId, membersCount]),
+    }, [groupId, membersCount, refreshKey]),
   );
 
   const renderPostItem = ({item: post}) => (

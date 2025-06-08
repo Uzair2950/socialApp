@@ -12,10 +12,9 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {API_BASE_URL} from '../constants/config';
-import {IMG_BASE_URL} from '../constants/config';
+import {API_BASE_URL, IMG_BASE_URL} from '../constants/config';
 
-const GroupMemberRemove = ({route, navigation}) => {
+const GroupChatMemberRemove = ({route, navigation}) => {
   const {groupId} = route.params;
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,34 +24,10 @@ const GroupMemberRemove = ({route, navigation}) => {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-
-      // First get member IDs
-      const membersResponse = await axios.get(
-        `${API_BASE_URL}/postgroup/getGroupMembers/${groupId}`,
+      const response = await axios.get(
+        `${API_BASE_URL}/chatgroup/getNonAdminMembers/${groupId}`,
       );
-      const memberIds = membersResponse.data.members;
-
-      // Then fetch details for each member
-      const membersWithDetails = await Promise.all(
-        memberIds.map(async memberId => {
-          try {
-            const userResponse = await axios.get(
-              `${API_BASE_URL}/user/getUserData/${memberId}`,
-            );
-            return userResponse.data;
-          } catch (error) {
-            console.error(`Error fetching user ${memberId}:`, error);
-            return {
-              _id: memberId,
-              name: 'Unknown User',
-              type: 'Member',
-              imgUrl: null,
-            };
-          }
-        }),
-      );
-
-      setMembers(membersWithDetails);
+      setMembers(response.data);
     } catch (error) {
       console.error('Fetch members error:', error);
       Alert.alert('Error', 'Failed to load group members');
@@ -62,17 +37,15 @@ const GroupMemberRemove = ({route, navigation}) => {
     }
   };
 
-  // Handle pull-to-refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchMembers();
   };
 
-  // Remove member function
   const removeMember = async userId => {
     Alert.alert(
-      'Confirm Removal',
-      'Are you sure you want to remove this member?',
+      'Remove Member',
+      'Are you sure you want to remove this member from the group?',
       [
         {
           text: 'Cancel',
@@ -83,17 +56,14 @@ const GroupMemberRemove = ({route, navigation}) => {
           onPress: async () => {
             try {
               setRemovingId(userId);
-              await axios.post(
-                `${API_BASE_URL}/postgroup/removeMember/${groupId}/${userId}`,
+              await axios.put(
+                `${API_BASE_URL}/chatgroup/removeMember/${groupId}/${userId}`,
               );
-
-              // Optimistic UI update
               setMembers(prev => prev.filter(member => member._id !== userId));
               Alert.alert('Success', 'Member removed successfully');
             } catch (error) {
               console.error('Remove error:', error);
               Alert.alert('Error', 'Failed to remove member');
-              // Refresh to ensure consistency
               fetchMembers();
             } finally {
               setRemovingId(null);
@@ -105,38 +75,19 @@ const GroupMemberRemove = ({route, navigation}) => {
     );
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, [groupId]);
-
-  // Render each member item
   const renderMemberItem = ({item}) => (
     <View style={styles.memberItem}>
       <Image
         source={{
           uri: item.imgUrl
-            ? `${IMG_BASE_URL}${item.imgUrl.startsWith('/') ? '' : '/'}${
-                item.imgUrl
-              }`
+            ? `${IMG_BASE_URL}${item.imgUrl}`
             : `${IMG_BASE_URL}/static/avatars/default_profile.png`,
         }}
         style={styles.memberImage}
       />
-
-      <View style={styles.memberInfo}>
-        <Text style={styles.memberName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.memberType} numberOfLines={1}>
-          {item.type}
-        </Text>
-      </View>
-
+      <Text style={styles.memberName}>{item.name}</Text>
       <TouchableOpacity
-        style={[
-          styles.removeButton,
-          removingId === item._id && styles.removeButtonDisabled,
-        ]}
+        style={styles.removeButton}
         onPress={() => removeMember(item._id)}
         disabled={removingId === item._id}>
         {removingId === item._id ? (
@@ -147,6 +98,10 @@ const GroupMemberRemove = ({route, navigation}) => {
       </TouchableOpacity>
     </View>
   );
+
+  useEffect(() => {
+    fetchMembers();
+  }, [groupId]);
 
   if (loading && !refreshing) {
     return (
@@ -159,25 +114,27 @@ const GroupMemberRemove = ({route, navigation}) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Group Members ({members.length})</Text>
+      <Text style={styles.title}>Remove Members</Text>
+      <Text style={styles.subtitle}>
+        {members.length} non-admin members in group
+      </Text>
 
       <FlatList
         data={members}
         renderItem={renderMemberItem}
         keyExtractor={item => item._id}
-        contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={['#14AE5C']}
-            tintColor="#14AE5C"
           />
         }
+        contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="group" size={50} color="#ccc" />
-            <Text style={styles.emptyText}>No members found</Text>
+            <Text style={styles.emptyText}>No members available to remove</Text>
           </View>
         }
       />
@@ -195,17 +152,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   loadingText: {
     marginTop: 10,
     color: '#14AE5C',
-    fontSize: 16,
   },
-  headerTitle: {
+  title: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -215,37 +176,21 @@ const styles = StyleSheet.create({
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 10,
     padding: 15,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   memberImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     marginRight: 15,
-    backgroundColor: '#eee',
-  },
-  memberInfo: {
-    flex: 1,
-    marginRight: 10,
-    overflow: 'hidden',
   },
   memberName: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '500',
     color: '#333',
-    marginBottom: 3,
-  },
-  memberType: {
-    fontSize: 14,
-    color: '#666',
   },
   removeButton: {
     backgroundColor: '#e74c3c',
@@ -255,21 +200,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  removeButtonDisabled: {
-    backgroundColor: '#f5b7b1',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    marginTop: 50,
   },
   emptyText: {
-    textAlign: 'center',
+    marginTop: 10,
     color: '#666',
-    marginTop: 15,
     fontSize: 16,
   },
 });
 
-export default GroupMemberRemove;
+export default GroupChatMemberRemove;
