@@ -439,7 +439,7 @@ const Messages = ({navigation}) => {
   const [selectedUsersForGroup, setSelectedUsersForGroup] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [creatingChat, setCreatingChat] = useState(false);
-  const uid = '67573f6611a71256e4e32d5f';
+  const uid = '6754a9268db89992d5b8221f';
 
   const fetchChats = async () => {
     try {

@@ -30,6 +30,8 @@ import GroupChatMemberRemove from './frontend/GroupChatMemberRemove';
 import GroupChatMembersView from './frontend/GroupChatMembersView';
 import SearchGroups from './frontend/searchGroups';
 import AddGroupAdmins from './frontend/AddGroupAdmins';
+import VipCollections from './frontend/VipCollections';
+import VipCollectionChat from './frontend/VipCollectionChat';
 import {DefaultTheme, Provider as PaperProvider} from 'react-native-paper';
 import home from './Images/Home.png';
 import chats from './Images/chats.png';
@@ -106,6 +108,14 @@ const AlertWithDrawer = () => {
         component={UserGroups}
         options={{
           headerTitleAlign: 'center',
+        }}
+      />
+      <Drawer.Screen
+        name="VIP Collections"
+        component={VipCollections}
+        options={{
+          headerTitleAlign: 'center',
+          headerTitle: 'Vip Collections',
         }}
       />
     </Drawer.Navigator>
@@ -421,6 +431,11 @@ const App = () => {
             name="ImageViewer"
             component={ImageView}
             options={{headerStyle: {backgroundColor: 'black'}}}
+          />
+          <Stack.Screen
+            name="VipChat"
+            component={VipCollectionChat}
+            options={{headerStyle: '', headerTitle: 'VIP Chat'}}
           />
         </Stack.Navigator>
       </NavigationContainer>
